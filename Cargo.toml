@@ -1,0 +1,11 @@
+[package]
+name = "brain"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.36", features = ["env", "derive"] }
+ollama-rs = "0.3.0"
+regex = "1.11.1"
+rmcp = { version = "0.1.5", features = ["client", "server"] }
+tokio = { version = "1.44.2", features = ["full"] }
