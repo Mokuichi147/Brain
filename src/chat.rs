@@ -57,6 +57,26 @@ impl Chat {
         }
     }
 
+    pub async fn generate_title(&mut self) -> String {
+        let prompt = "長文は禁止されています。また、余計な文章も禁止されています。会話内容からユーザー目線でのタイトルを日本語で生成してください。";
+        let message = ChatMessage::user(prompt.to_string());
+        let res = self.context.send_chat_messages_with_history(
+            &mut self.history.clone(),
+            ChatMessageRequest::new(
+                self.vision_model.clone(),
+                vec![message.clone()],
+                
+            ),
+        ).await.unwrap();
+
+        // thinkingモデルの場合は、会話履歴からthinkingタグを削除することでコンテキスト長を節約する
+        let thinking_result = self.get_thinking(&res.message.content, false);
+        if let Some(thinking) = thinking_result {
+            return thinking;
+        }
+        return res.message.content;
+    }
+
     fn get_thinking(&self, text: &str, is_result: bool) -> Option<String> {
         if let Some(captures) = self.thinking_regex.captures(text) {
             if is_result {

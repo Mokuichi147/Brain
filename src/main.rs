@@ -35,6 +35,11 @@ async fn main() {
             chat.clear_history();
             println!("History cleared.");
         }
+        else if input == "title" {
+            let title = chat.generate_title().await;
+            println!("title: {}", title);
+            continue;
+        }
 
         chat.generate_response(input).await;
     }
