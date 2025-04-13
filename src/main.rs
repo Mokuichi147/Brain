@@ -39,8 +39,9 @@ async fn main() {
         chat.generate_response(input).await;
     }
 
-    println!("history:");
+    println!("\nhistory:");
     chat.get_history().iter().for_each(|message| {
-        println!("{:?}: {}", message.role, message.content);
+        println!("{:?}:", message.role);
+        println!("    {}", message.content);
     });
 }
