@@ -46,9 +46,9 @@ impl Chat {
         ).await.unwrap();
 
         let text = res.message.content.clone();
-
         println!("{}", text);
 
+        // thinkingモデルの場合は、会話履歴からthinkingタグを削除することでコンテキスト長を節約する
         let thinking_result = self.get_thinking(&text, true);
         if let Some(thinking) = thinking_result {
             if let Some(res) = self.history.last_mut() {
