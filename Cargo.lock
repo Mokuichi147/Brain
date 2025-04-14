@@ -156,10 +156,13 @@ checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
 name = "brain"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "clap",
  "ollama-rs",
  "regex",
  "rmcp",
+ "schemars",
+ "serde",
  "tokio",
 ]
 
@@ -855,6 +858,7 @@ checksum = "7a4b4750770584c8b4a643d0329e7bedacc4ecf68b7c7ac3e1fec2bafd6312f7"
 dependencies = [
  "async-stream",
  "log",
+ "ollama-rs-macros",
  "reqwest",
  "schemars",
  "serde",
@@ -862,6 +866,17 @@ dependencies = [
  "static_assertions",
  "thiserror",
  "url",
+]
+
+[[package]]
+name = "ollama-rs-macros"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64b21360455ab4af28d7878398f3d44961ce165f20865b10870c9d2a6c7a3fdf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

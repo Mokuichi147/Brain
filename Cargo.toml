@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chrono = "0.4.40"
 clap = { version = "4.5.36", features = ["env", "derive"] }
-ollama-rs = "0.3.0"
+ollama-rs = { version = "0.3.0", features = ["macros"] }
 regex = "1.11.1"
 rmcp = { version = "0.1.5", features = ["client", "server"] }
+schemars = "0.8.22"
+serde = { version = "1.0.219", features = ["derive"] }
 tokio = { version = "1.44.2", features = ["full"] }

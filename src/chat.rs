@@ -1,5 +1,6 @@
-use ollama_rs::{generation::chat::{request::ChatMessageRequest, ChatMessage}, Ollama};
+use ollama_rs::{coordinator::Coordinator, generation::chat::{request::ChatMessageRequest, ChatMessage}, Ollama};
 use regex::Regex;
+use chrono::Local;
 
 pub struct Chat {
     context: Ollama,
@@ -36,17 +37,17 @@ impl Chat {
     }
 
     pub async fn generate_response(&mut self, prompt: &str) {
+        let mut coordinator = Coordinator::new(self.context.clone(), self.tool_model.to_string(), self.history.clone())
+            .add_tool(get_datetime_now);
+
         let message = ChatMessage::user(prompt.to_string());
-        let res = self.context.send_chat_messages_with_history(
-            &mut self.history,
-            ChatMessageRequest::new(
-                self.tool_model.clone(),
-                vec![message.clone()],
-            ),
-        ).await.unwrap();
+        let res = coordinator.chat(vec![message.clone()]).await.unwrap();
 
         let text = res.message.content.clone();
         println!("{}", text);
+
+        self.history.push(message);
+        self.history.push(res.message);
 
         // thinkingモデルの場合は、会話履歴からthinkingタグを削除することでコンテキスト長を節約する
         let thinking_result = self.get_thinking(&text, true);
@@ -65,7 +66,6 @@ impl Chat {
             ChatMessageRequest::new(
                 self.vision_model.clone(),
                 vec![message.clone()],
-                
             ),
         ).await.unwrap();
 
@@ -103,4 +103,13 @@ impl Default for Chat {
     fn default() -> Self {
         Self::new("localhost", 11434, "qwq:32b", "gemma3:27b")
     }
+}
+
+
+/// 現在の時刻を取得します。
+#[ollama_rs::function]
+async fn get_datetime_now() -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let now = Local::now();
+    let result: String = format!("現在時刻: {}", now);
+    Ok(result)
 }
