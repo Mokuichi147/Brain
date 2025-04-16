@@ -1,3 +1,4 @@
+use fasteval::Evaler;
 use ollama_rs::{coordinator::Coordinator, generation::chat::{request::ChatMessageRequest, ChatMessage}, Ollama};
 use regex::Regex;
 use chrono::Local;
@@ -38,7 +39,8 @@ impl Chat {
 
     pub async fn generate_response(&mut self, prompt: &str) {
         let mut coordinator = Coordinator::new(self.context.clone(), self.tool_model.to_string(), self.history.clone())
-            .add_tool(get_datetime_now);
+            .add_tool(get_datetime_now)
+            .add_tool(calculator);
 
         let message = ChatMessage::user(prompt.to_string());
         let res = coordinator.chat(vec![message.clone()]).await.unwrap();
@@ -112,4 +114,27 @@ async fn get_datetime_now() -> Result<String, Box<dyn std::error::Error + Send +
     let now = Local::now();
     let result: String = format!("現在時刻: {}", now);
     Ok(result)
+}
+
+
+/// 計算時の使用が義務付けられています。与えられた計算式を計算します。
+/// 
+/// * formula: 計算式、例: "1+sum(2,3)*abs(4-5)/6^2"
+#[ollama_rs::function]
+async fn calculator(formula: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let parser = fasteval::Parser::new();
+    let mut slab = fasteval::Slab::new();
+    let val = parser.parse(&formula, &mut slab.ps);
+    if let Err(e) = val {
+        return Err(Box::new(e));
+    }
+
+    let val = val.unwrap()
+        .from(&slab.ps)
+        .eval(&slab, &mut fasteval::EmptyNamespace);
+
+    if let Err(e) = val {
+        return Err(Box::new(e));
+    }
+    Ok(val.unwrap().to_string())
 }
