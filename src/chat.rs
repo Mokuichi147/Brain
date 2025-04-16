@@ -43,7 +43,12 @@ impl Chat {
             .add_tool(calculator);
 
         let message = ChatMessage::user(prompt.to_string());
-        let res = coordinator.chat(vec![message.clone()]).await.unwrap();
+        let res = coordinator.chat(vec![message.clone()]).await;
+        if res.is_err() {
+            println!("Error: {}", res.unwrap_err());
+            return;
+        }
+        let res = res.unwrap();
 
         let text = res.message.content.clone();
         println!("{}", text);
