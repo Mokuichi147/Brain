@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::BufRead};
+use rmcp::model::{ClientCapabilities, ClientInfo, Implementation};
+use rmcp::{ServiceExt, transport::SseTransport};
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct McpSetting {
@@ -11,6 +14,62 @@ struct McpSetting {
     args: Option<Vec<String>>,
 }
 
+pub struct Mcp {
+    pub tools: Vec<rmcp::model::Tool>,
+}
+
+
+impl Mcp {
+    pub async fn load_setting(&mut self, file_path: &str) {
+        let mcp_settings = load_setting_file(file_path);
+        for mcp_setting in mcp_settings {
+            if mcp_setting.connection_type.to_lowercase() == "sse" {
+                if mcp_setting.url.is_none() {
+                    println!("SSEのURLが指定されていません: {}", mcp_setting.name);
+                    continue;
+                }
+
+                self.add_mcp_server_sse(&mcp_setting.name, &mcp_setting.url.unwrap()).await;
+            }
+        }
+    }
+
+    pub async fn add_mcp_server_sse(&mut self, name: &str, url: &str) {
+        let transport = SseTransport::start(url).await;
+        if transport.is_err() {
+            println!("SSEサーバーに接続できません: {}", name);
+            return;
+        }
+        let transport = transport.unwrap();
+
+        let client_info = ClientInfo {
+            protocol_version: Default::default(),
+            capabilities: ClientCapabilities::default(),
+            client_info: Implementation {
+                name: name.to_string(),
+                version: "0.0.1".to_string(),
+            },
+        };
+
+        let client = client_info.serve(transport).await;
+        if client.is_err() {
+            println!("SSEサーバーに接続できません: {}", name);
+            return;
+        }
+        let client = client.unwrap();
+
+        let tool_list = client.list_tools(Default::default()).await;
+        if tool_list.is_err() {
+            println!("ツールの取得に失敗しました: {}", name);
+            return;
+        }
+        let tool_list = tool_list.unwrap();
+
+        for tool in tool_list.tools {
+            self.tools.push(tool);
+        }
+    }
+}
 
 fn load_setting_file(file_path: &str) -> Vec<McpSetting> {
     if !std::path::Path::new(file_path).exists() {
