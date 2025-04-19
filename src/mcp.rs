@@ -1,4 +1,6 @@
+use rmcp::transport::TokioChildProcess;
 use serde::{Deserialize, Serialize};
+use tokio::process::Command;
 use std::{collections::HashMap, io::BufRead};
 use rmcp::model::{ClientCapabilities, ClientInfo, Implementation};
 use rmcp::{ServiceExt, transport::SseTransport};
@@ -30,6 +32,18 @@ impl Mcp {
                 }
 
                 self.add_mcp_server_sse(&mcp_setting.name, &mcp_setting.url.unwrap()).await;
+
+            } else if mcp_setting.connection_type.to_lowercase() == "stdio" {
+                if mcp_setting.command.is_none() {
+                    println!("stdioのコマンドが指定されていません: {}", mcp_setting.name);
+                    continue;
+                }
+
+                self.add_mcp_server_stdio(&mcp_setting.name, &mcp_setting.command.unwrap(), &mcp_setting.args).await;
+                
+            } else {
+                println!("この接続方式はサポートしていません: {}", mcp_setting.connection_type);
+
             }
         }
     }
@@ -69,7 +83,43 @@ impl Mcp {
             self.tools.push(tool);
         }
     }
+
+    pub async fn add_mcp_server_stdio(&mut self, name: &str, command: &str, args: &Option<Vec<String>>) {
+        let mut command = Command::new(command);
+        if let Some(args) = args.as_ref() {
+            for arg in args {
+                command.arg(arg);
+            }
+        }
+
+        let transport = TokioChildProcess::new(&mut command);
+        if transport.is_err() {
+            println!("stdioサーバーに接続できません: {}", name);
+            return;
+        }
+        let transport = transport.unwrap();
+
+        let service = ().serve(transport).await;
+        if service.is_err() {
+            println!("サービスに接続できません: {}", name);
+            return;
+        }
+        let service = service.unwrap();
+
+        // List tools
+        let tool_list = service.list_tools(Default::default()).await;
+        if tool_list.is_err() {
+            println!("ツールの取得に失敗しました: {}", name);
+            return;
+        }
+        let tool_list = tool_list.unwrap();
+
+        for tool in tool_list.tools {
+            self.tools.push(tool);
+        }
+    }
 }
+
 
 fn load_setting_file(file_path: &str) -> Vec<McpSetting> {
     if !std::path::Path::new(file_path).exists() {
