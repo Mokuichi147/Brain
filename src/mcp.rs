@@ -22,6 +22,15 @@ pub struct Mcp {
 
 
 impl Mcp {
+    pub fn new() -> Self {
+        Mcp {
+            tools: Vec::new(),
+        }
+    }
+}
+
+
+impl Mcp {
     pub async fn load_setting(&mut self, file_path: &str) {
         let mcp_settings = load_setting_file(file_path);
         for mcp_setting in mcp_settings {
@@ -40,7 +49,7 @@ impl Mcp {
                 }
 
                 self.add_mcp_server_stdio(&mcp_setting.name, &mcp_setting.command.unwrap(), &mcp_setting.args).await;
-                
+
             } else {
                 println!("この接続方式はサポートしていません: {}", mcp_setting.connection_type);
 
@@ -51,7 +60,7 @@ impl Mcp {
     pub async fn add_mcp_server_sse(&mut self, name: &str, url: &str) {
         let transport = SseTransport::start(url).await;
         if transport.is_err() {
-            println!("SSEサーバーに接続できません: {}", name);
+            println!("SSEサーバーに接続できません: {} {}", name, url);
             return;
         }
         let transport = transport.unwrap();
@@ -67,7 +76,7 @@ impl Mcp {
 
         let client = client_info.serve(transport).await;
         if client.is_err() {
-            println!("SSEサーバーに接続できません: {}", name);
+            println!("クライアントが作成できません: {}", name);
             return;
         }
         let client = client.unwrap();
@@ -118,6 +127,15 @@ impl Mcp {
             self.tools.push(tool);
         }
     }
+
+
+    pub fn show_tools(&self) {
+        for tool in &self.tools {
+            println!("name: {}", tool.name);
+            println!("description: {}", tool.description);
+            println!();
+        }
+    }
 }
 
 
@@ -134,7 +152,7 @@ fn load_setting_file(file_path: &str) -> Vec<McpSetting> {
     let mut settings: Vec<McpSetting> = Vec::new();
     for (name, value) in map {
         let entry_type = value["type"].as_str().unwrap_or_default().to_string();
-        let url = value["url"].as_str().map(|s| s.to_string());
+        let url = value["url"].as_str().map(|s| s.to_string() + "/sse");
         let command = value["command"].as_str().map(|s| s.to_string());
         let args = value["args"].as_array().map(|arr| {
             arr.iter()

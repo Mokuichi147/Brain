@@ -1,5 +1,6 @@
 use clap::{self, Parser};
 mod chat;
+mod mcp;
 
 #[derive(clap::Parser, Debug)]
 #[clap(about = "Brain", version = "1.0")]
@@ -21,6 +22,11 @@ pub struct Args {
 async fn main() {
     let args = Args::parse();
     let mut chat = chat::Chat::new(&args.host, args.port, &args.tool_model, &args.vision_model);
+
+    let mcp_setting_path = "mcp.json";
+    let mut mcp = mcp::Mcp::new();
+    mcp.load_setting(mcp_setting_path).await;
+    //mcp.show_tools();
 
     loop {
         let mut input = String::new();
