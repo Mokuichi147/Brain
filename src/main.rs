@@ -14,7 +14,7 @@ pub struct Args {
     #[clap(short, long, default_value = "qwq:32b", env = "BRAIN_LLM_TOOL_MODEL")]
     pub tool_model: String,
     
-    #[clap(short, long, default_value = "gemma3:27b", env = "BRAIN_LLM_VISION_MODEL")]
+    #[clap(short, long, default_value = "gemma3:27b-it-qat", env = "BRAIN_LLM_VISION_MODEL")]
     pub vision_model: String,
 }
 
