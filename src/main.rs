@@ -11,7 +11,7 @@ pub struct Args {
     #[clap(short, long, default_value = "11434", env = "BRAIN_LLM_PORT")]
     pub port: u16,
 
-    #[clap(short, long, default_value = "qwq:32b", env = "BRAIN_LLM_TOOL_MODEL")]
+    #[clap(short, long, default_value = "qwen3:30b-a3b", env = "BRAIN_LLM_TOOL_MODEL")]
     pub tool_model: String,
     
     #[clap(short, long, default_value = "gemma3:27b-it-qat", env = "BRAIN_LLM_VISION_MODEL")]
