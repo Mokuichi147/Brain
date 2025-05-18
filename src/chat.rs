@@ -106,12 +106,6 @@ impl Chat {
     }
 }
 
-impl Default for Chat {
-    fn default() -> Self {
-        Self::new("localhost", 11434, "qwq:32b", "gemma3:27b")
-    }
-}
-
 
 /// 現在の時刻を取得します。
 #[ollama_rs::function]
