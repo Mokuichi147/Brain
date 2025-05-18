@@ -14,7 +14,7 @@ pub struct Chat {
 impl Chat {
     pub fn new(host: &str, port: u16, tool_model: &str, vision_model: &str) -> Self {
         let url = format!("http://{}", host);
-        let thinking_regex = Regex::new(r"<think>([\s\S]+)</think>").unwrap();
+        let thinking_regex = Regex::new(r"(?s)<think>\s*(.*?)\s*(?:</think>|\z)").unwrap();
 
         let context = Ollama::new(url, port);
         let history = Vec::new();
