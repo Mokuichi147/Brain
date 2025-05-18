@@ -1,4 +1,5 @@
 use clap::{self, Parser};
+mod client;
 mod chat;
 mod mcp;
 
@@ -21,6 +22,11 @@ pub struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+
+    let ollama_client = client::OllamaClient::new(&args.host, args.port, &args.tool_model, "Hello, Brain!");
+    let result = ollama_client.generate().await;
+
+    /*
     let mut chat = chat::Chat::new(&args.host, args.port, &args.tool_model, &args.vision_model);
 
     let mcp_setting_path = "mcp.json";
@@ -55,4 +61,5 @@ async fn main() {
         println!("{:?}:", message.role);
         println!("    {}", message.content);
     });
+    */
 }
