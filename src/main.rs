@@ -23,8 +23,18 @@ pub struct Args {
 async fn main() {
     let args = Args::parse();
 
-    let ollama_client = client::OllamaClient::new(&args.host, args.port, &args.tool_model, "Hello, Brain!");
-    let result = ollama_client.generate().await;
+    let ollama_client = client::OllamaClient::new(format!("http://{}:{}", &args.host, args.port).into());
+    let tools = client::create_tools();
+    
+    let messages = vec![
+        client::Message {
+            role: "user".to_string(),
+            content: "What's the weather like in Tokyo? Also, can you calculate 15 + 27?".to_string(),
+            tool_calls: None,
+        }
+    ];
+
+    ollama_client.chat_stream_with_tools(messages, &args.tool_model, Some(tools)).await.unwrap();
 
     /*
     let mut chat = chat::Chat::new(&args.host, args.port, &args.tool_model, &args.vision_model);
